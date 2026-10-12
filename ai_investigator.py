@@ -1,7 +1,9 @@
+
 import json
 import os
 from pathlib import Path
 
+import streamlit as st
 from dotenv import load_dotenv
 from google import genai
 
@@ -13,9 +15,43 @@ from google import genai
 BASE_DIR = Path(__file__).resolve().parent
 REPORTS_DIR = BASE_DIR / "reports"
 
+# Load local environment variables during development
 load_dotenv(BASE_DIR / ".env")
 
 MODEL_NAME = "gemini-3.8-flash"
+
+
+# --------------------------------------------------
+# Get Gemini API key
+# --------------------------------------------------
+
+def get_gemini_api_key():
+    """
+    Retrieve the Gemini API key.
+
+    Priority:
+    1. Environment variable / local .env
+    2. Streamlit Community Cloud Secrets
+    """
+
+    api_key = os.getenv("GEMINI_API_KEY")
+
+    if api_key:
+        return api_key
+
+    try:
+        api_key = st.secrets.get("GEMINI_API_KEY")
+    except (FileNotFoundError, KeyError):
+        api_key = None
+
+    if not api_key:
+        raise ValueError(
+            "GEMINI_API_KEY is missing. "
+            "Configure it in your local .env file "
+            "or Streamlit Community Cloud Secrets."
+        )
+
+    return api_key
 
 
 # --------------------------------------------------
@@ -32,7 +68,8 @@ def get_latest_quality_report():
     if not report_files:
         raise FileNotFoundError(
             "No data-quality reports found. "
-            "Run 'python pipeline.py' first."
+            "Run the complete pipeline first to generate "
+            "a data-quality report."
         )
 
     latest_report = max(
@@ -57,18 +94,11 @@ def investigate_data_quality(report_data):
     AI findings are hypotheses, not confirmed root causes.
     """
 
-    api_key = os.getenv("GEMINI_API_KEY")
-
-    if not api_key:
-        raise ValueError(
-            "GEMINI_API_KEY is missing. "
-            "Check your .env file."
-        )
+    api_key = get_gemini_api_key()
 
     client = genai.Client(api_key=api_key)
 
-    # Limit the input to the quality report rather than
-    # sending all raw product and cart records.
+    # Send the quality report instead of all raw records
     report_json = json.dumps(
         report_data,
         indent=2,
@@ -168,3 +198,4 @@ def run_ai_investigation():
 
 if __name__ == "__main__":
     run_ai_investigation()
+
