@@ -1,0 +1,24 @@
+# Python environment and cache
+.venv/
+__pycache__/
+*.py[cod]
+
+# Secrets
+.env
+.env.*
+!.env.example
+.streamlit/secrets.toml
+
+# Generated pipeline data
+data/bronze/
+data/silver/
+data/gold/
+reports/
+
+# IDE and operating system
+.vscode/
+.DS_Store
+
+# Local backup and test scripts
+app_backup.py
+test_gemini.py

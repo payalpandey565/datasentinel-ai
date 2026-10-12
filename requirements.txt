@@ -1,0 +1,8 @@
+streamlit
+requests
+pandas
+plotly
+pyarrow
+pyspark
+google-genai
+python-dotenv
